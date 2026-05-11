@@ -7,6 +7,8 @@ export async function GET() {
     },
   });
 
+  //ss
+
   if (!res.ok) {
     return Response.json(
       { error: "Failed to fetch movies" },
