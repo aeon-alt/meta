@@ -56,7 +56,7 @@ export default function MovieRow({
         className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
       >
         {movies.map((movie) => (
-          <div key={movie.id} className="flex-shrink-0 w-[160px]">
+          <div key={movie.id} className="shrink-0 w-40">
             <MovieCard movie={movie} />
           </div>
         ))}

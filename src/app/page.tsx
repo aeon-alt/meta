@@ -1,4 +1,5 @@
 import Hero from "../components/Hero";
+import MovieCard from "../components/MovieCard";
 import MovieRow from "../components/MovieRow";
 
 type Movie = {
@@ -22,11 +23,25 @@ export default async function Page() {
     <main>
       {/* HERO SECTION */}
       <Hero />
+      
+      {/* MOVIES SECTION */}
+      <section style={{ padding: "20px" }}>
+        <h2 style={{ color: "white", marginBottom: "20px" }}>Trending Movies</h2>
 
-      {/* MOVIE ROWS */}
-      <MovieRow title="Trending Movies" movies={movies} />
-      <MovieRow title="Popular Movies" movies={movies} />
-      <MovieRow title="Top Rated" movies={movies} />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          {movies.map((movie) => (
+            <MovieCard key={movie.id} movie={movie} />
+          ))}
+        </div>
+      </section>
+      
+      
     </main>
   );
 }
