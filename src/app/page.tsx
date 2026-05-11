@@ -1,6 +1,6 @@
-import Hero from "../components/Hero";
-import MovieCard from "../components/MovieCard";
-import { getMovies } from "../lib/getMovies";
+import Hero from "@/components/Hero";
+import MovieCard from "@/components/MovieCard";
+import { getMovies } from "@/lib/getMovies";
 
 export default async function Page() {
   const movies = await getMovies();
@@ -9,7 +9,7 @@ export default async function Page() {
     <main>
       <Hero />
 
-      <section style={{ padding: "20px" }}>
+      <section style={{ padding: "20px", marginTop: "20px" }}>
         <h2 style={{ color: "white" }}>Trending Movies</h2>
 
         <div
