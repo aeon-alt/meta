@@ -7,7 +7,7 @@ export default async function Page() {
 
   return (
     <main>
-      <Hero />
+      <Hero movies={movies} />
 
       <section style={{ padding: "20px", marginTop: "20px" }}>
         <h2 style={{ color: "white" }}>Trending Movies</h2>
