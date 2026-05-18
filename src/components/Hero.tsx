@@ -179,7 +179,7 @@ export default function Hero({ movies, mediaType = "movie" }: HeroProps) {
 
               <button
                 onClick={handleWatchlist}
-                className={`btn-icon w-12 h-12 ${inList ? "bg-red-600 border-red-600" : ""}`}
+                className={`btn-icon w-12 h-12 ${inList ? "bg-blue-600 border-blue-600" : ""}`}
                 title={inList ? "Remove from My List" : "Add to My List"}
               >
                 {inList ? (
@@ -226,7 +226,7 @@ export default function Hero({ movies, mediaType = "movie" }: HeroProps) {
             key={i}
             onClick={() => goTo(i)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`transition-all duration-300 rounded-full ${i === current ? "w-6 h-2 bg-red-600" : "w-2 h-2 bg-white/40 hover:bg-white/70"}`}
+            className={`transition-all duration-300 rounded-full ${i === current ? "w-6 h-2 bg-blue-600" : "w-2 h-2 bg-white/40 hover:bg-white/70"}`}
           />
         ))}
       </div>
@@ -249,7 +249,7 @@ export default function Hero({ movies, mediaType = "movie" }: HeroProps) {
           <button
             key={m.id}
             onClick={() => goTo(i)}
-            className={`w-16 h-10 rounded overflow-hidden transition-all duration-300 ${i === current ? "ring-2 ring-red-500 opacity-100 scale-110" : "opacity-50 hover:opacity-80"}`}
+            className={`w-16 h-10 rounded overflow-hidden transition-all duration-300 ${i === current ? "ring-2 ring-blue-500 opacity-100 scale-110" : "opacity-50 hover:opacity-80"}`}
           >
             <img src={getPosterUrl(m.poster_path, "w200")} alt={m.title} className="w-full h-full object-cover" />
           </button>
@@ -282,7 +282,7 @@ export default function Hero({ movies, mediaType = "movie" }: HeroProps) {
               />
               <button
                 onClick={() => setShowTrailer(false)}
-                className="absolute -top-4 -right-4 btn-icon bg-red-600 border-red-600 w-10 h-10"
+                className="absolute -top-4 -right-4 btn-icon bg-blue-600 border-blue-600 w-10 h-10"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

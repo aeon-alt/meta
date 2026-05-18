@@ -35,7 +35,7 @@ export default function MovieCard({ item, mediaType = "movie", rank }: MovieCard
     >
       <Link href={href} className="block">
         {/* Poster */}
-        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 shadow-lg group-hover:shadow-[0_8px_30px_rgba(229,9,20,0.3)] transition-shadow duration-300">
+        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 shadow-lg group-hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-shadow duration-300">
           <img
             src={getPosterUrl(item.poster_path, "w500")}
             alt={title}
@@ -53,7 +53,7 @@ export default function MovieCard({ item, mediaType = "movie", rank }: MovieCard
               <Link
                 href={href}
                 onClick={(e) => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-1.5 rounded-md transition"
+                className="flex-1 flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 rounded-md transition"
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
@@ -63,7 +63,7 @@ export default function MovieCard({ item, mediaType = "movie", rank }: MovieCard
               {/* Watchlist */}
               <button
                 onClick={handleWatchlist}
-                className={`w-8 h-8 flex items-center justify-center rounded-full border transition ${inList ? "bg-red-600 border-red-600 text-white" : "border-white/30 text-white hover:border-red-500 hover:text-red-400"}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full border transition ${inList ? "bg-blue-600 border-blue-600 text-white" : "border-white/30 text-white hover:border-blue-500 hover:text-blue-400"}`}
                 aria-label={inList ? "Remove from watchlist" : "Add to watchlist"}
               >
                 {inList ? (
@@ -104,7 +104,7 @@ export default function MovieCard({ item, mediaType = "movie", rank }: MovieCard
 
         {/* Text below card */}
         <div className="mt-2 px-0.5">
-          <p className="text-white text-xs font-medium line-clamp-1 group-hover:text-red-400 transition-colors">{title}</p>
+          <p className="text-white text-xs font-medium line-clamp-1 group-hover:text-blue-400 transition-colors">{title}</p>
           <p className="text-gray-500 text-[11px] mt-0.5">{year}</p>
         </div>
       </Link>

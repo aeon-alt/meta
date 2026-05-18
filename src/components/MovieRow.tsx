@@ -48,7 +48,7 @@ export default function MovieRow({
           {title}
         </h2>
         {viewAllHref && (
-          <a href={viewAllHref} className="text-red-500 hover:text-red-400 text-sm font-medium transition flex items-center gap-1">
+          <a href={viewAllHref} className="text-blue-500 hover:text-blue-400 text-sm font-medium transition flex items-center gap-1">
             See all
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

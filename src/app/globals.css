@@ -6,13 +6,13 @@
   --bg-primary: #0b0b0f;
   --bg-secondary: #111827;
   --bg-card: #161b2e;
-  --accent: #E50914;
-  --accent-hover: #f40612;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --text-muted: #6b7280;
   --border: rgba(255,255,255,0.08);
-  --glow-red: rgba(229, 9, 20, 0.4);
+  --glow-blue: rgba(59, 130, 246, 0.4);
   --glow-white: rgba(255,255,255,0.15);
 }
 
@@ -102,7 +102,7 @@ body {
 .btn-primary:hover {
   background: var(--accent-hover);
   transform: scale(1.03);
-  box-shadow: 0 0 24px var(--glow-red);
+  box-shadow: 0 0 24px var(--glow-blue);
 }
 
 .btn-secondary {
@@ -203,6 +203,6 @@ body {
 /* ─── Section Separator ─────────────────────────────────────────────────────── */
 .separator-glow {
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(229,9,20,0.6), rgba(229,9,20,0.4), transparent);
-  box-shadow: 0 0 12px rgba(229,9,20,0.3);
+  background: linear-gradient(to right, transparent, rgba(59,130,246,0.6), rgba(59,130,246,0.4), transparent);
+  box-shadow: 0 0 12px rgba(59,130,246,0.3);
 }

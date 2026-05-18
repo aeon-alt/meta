@@ -50,14 +50,14 @@ export default async function SearchPage({ searchParams }: Props) {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {movies.map((result) => (
                 <Link key={result.id} href={`/movie/${result.id}`} className="group">
-                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 mb-2 group-hover:ring-2 group-hover:ring-red-500 transition">
+                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 mb-2 group-hover:ring-2 group-hover:ring-blue-500 transition">
                     <img
                       src={getPosterUrl((result as any).poster_path, "w500")}
                       alt={getTitle(result as any)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <p className="text-white text-xs font-medium line-clamp-2 group-hover:text-red-400 transition">{getTitle(result as any)}</p>
+                  <p className="text-white text-xs font-medium line-clamp-2 group-hover:text-blue-400 transition">{getTitle(result as any)}</p>
                   <p className="text-gray-500 text-[11px]">{getReleaseYear(result as any)}</p>
                 </Link>
               ))}
@@ -74,14 +74,14 @@ export default async function SearchPage({ searchParams }: Props) {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {tv.map((result) => (
                 <Link key={result.id} href={`/tv/${result.id}`} className="group">
-                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 mb-2 group-hover:ring-2 group-hover:ring-red-500 transition">
+                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-900 mb-2 group-hover:ring-2 group-hover:ring-blue-500 transition">
                     <img
                       src={getPosterUrl((result as any).poster_path, "w500")}
                       alt={getTitle(result as any)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <p className="text-white text-xs font-medium line-clamp-2 group-hover:text-red-400 transition">{getTitle(result as any)}</p>
+                  <p className="text-white text-xs font-medium line-clamp-2 group-hover:text-blue-400 transition">{getTitle(result as any)}</p>
                   <p className="text-gray-500 text-[11px]">{getReleaseYear(result as any)}</p>
                 </Link>
               ))}

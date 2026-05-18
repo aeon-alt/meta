@@ -15,17 +15,29 @@ import type {
 } from "@/types/tmdb";
 
 const BASE_URL = "https://api.themoviedb.org/3";
-const TOKEN = process.env.TMDB_READ_TOKEN;
 
 async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL(`${BASE_URL}${endpoint}`);
+  
+  const token = process.env.TMDB_READ_TOKEN;
+  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  
+  if (!token && apiKey) {
+    url.searchParams.set("api_key", apiKey);
+  }
+  
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const res = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     next: { revalidate: 3600 }, // 1 hour cache via Next.js fetch
   });
 

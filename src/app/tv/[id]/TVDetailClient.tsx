@@ -221,7 +221,7 @@ export default function TVDetailClient({
 
               <button
                 onClick={handleWatchlist}
-                className={`btn-icon w-12 h-12 ${inList ? "bg-red-600 border-red-600" : ""}`}
+                className={`btn-icon w-12 h-12 ${inList ? "bg-blue-600 border-blue-600" : ""}`}
                 title={inList ? "Remove from My List" : "Add to My List"}
               >
                 {inList ? (
@@ -264,7 +264,7 @@ export default function TVDetailClient({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="mt-10 rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(229,9,20,0.2)] border border-red-900/30"
+              className="mt-10 rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.2)] border border-blue-900/30"
             >
               <div className="flex items-center justify-between px-4 py-3" style={{ background: "var(--bg-secondary)" }}>
                 <span className="text-white font-semibold text-sm flex items-center gap-4">
@@ -309,7 +309,7 @@ export default function TVDetailClient({
                 <select
                   value={season}
                   onChange={(e) => setSeason(Number(e.target.value))}
-                  className="appearance-none bg-gray-900 border border-gray-700 text-white px-4 py-2 pr-10 rounded-lg outline-none focus:border-red-500 transition cursor-pointer"
+                  className="appearance-none bg-gray-900 border border-gray-700 text-white px-4 py-2 pr-10 rounded-lg outline-none focus:border-blue-500 transition cursor-pointer"
                 >
                   {tv.seasons.filter(s => s.season_number > 0).map((s) => (
                     <option key={s.id} value={s.season_number}>
@@ -337,7 +337,7 @@ export default function TVDetailClient({
                   <div 
                     key={ep.id} 
                     onClick={() => handlePlayEpisode(season, ep.episode_number)}
-                    className="flex-shrink-0 w-64 sm:w-72 glass-dark rounded-xl overflow-hidden group cursor-pointer snap-start hover:ring-2 hover:ring-red-500 transition-all duration-300"
+                    className="flex-shrink-0 w-64 sm:w-72 glass-dark rounded-xl overflow-hidden group cursor-pointer snap-start hover:ring-2 hover:ring-blue-500 transition-all duration-300"
                   >
                     <div className="relative aspect-video bg-gray-800">
                       <img
@@ -349,7 +349,7 @@ export default function TVDetailClient({
                       
                       {/* Play icon overlay */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="w-12 h-12 rounded-full bg-red-600/90 flex items-center justify-center text-white shadow-lg">
+                        <div className="w-12 h-12 rounded-full bg-blue-600/90 flex items-center justify-center text-white shadow-lg">
                           <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z" />
                           </svg>
@@ -366,7 +366,7 @@ export default function TVDetailClient({
                       )}
                     </div>
                     <div className="p-3">
-                      <h3 className="text-white text-sm font-semibold truncate group-hover:text-red-400 transition">{ep.name}</h3>
+                      <h3 className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition">{ep.name}</h3>
                       <p className="text-gray-400 text-xs mt-1 line-clamp-2 leading-relaxed" title={ep.overview}>
                         {ep.overview || "No description available."}
                       </p>
@@ -387,7 +387,7 @@ export default function TVDetailClient({
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3">
               {cast.map((member) => (
                 <div key={member.id} className="flex-shrink-0 w-24 text-center">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 mx-auto mb-2 border-2 border-transparent hover:border-red-500 transition">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 mx-auto mb-2 border-2 border-transparent hover:border-blue-500 transition">
                     <img
                       src={member.profile_path
                         ? `https://image.tmdb.org/t/p/w185${member.profile_path}`
@@ -412,7 +412,7 @@ export default function TVDetailClient({
               {reviews.results.slice(0, 4).map((review) => (
                 <div key={review.id} className="glass-dark rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-bold text-sm">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center font-bold text-sm">
                       {review.author.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -431,7 +431,7 @@ export default function TVDetailClient({
                   {review.content.length > 300 && (
                     <button
                       onClick={() => setExpandedReview(expandedReview === review.id ? null : review.id)}
-                      className="text-red-400 hover:text-red-300 text-xs mt-2 transition"
+                      className="text-blue-400 hover:text-blue-300 text-xs mt-2 transition"
                     >
                       {expandedReview === review.id ? "Show less" : "Read more"}
                     </button>
@@ -484,7 +484,7 @@ export default function TVDetailClient({
               />
               <button
                 onClick={() => setShowTrailer(false)}
-                className="absolute -top-4 -right-4 btn-icon bg-red-600 border-red-600 w-10 h-10"
+                className="absolute -top-4 -right-4 btn-icon bg-blue-600 border-blue-600 w-10 h-10"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

@@ -50,7 +50,8 @@ export default function Navbar() {
       setSearching(true);
       try {
         const data = await searchMulti(query);
-        setResults(data.results.slice(0, 8));
+        const moviesOnly = data.results.filter(r => r.media_type === "movie");
+        setResults(moviesOnly);
       } catch { /* silent */ }
       finally { setSearching(false); }
     }, 400);
@@ -104,7 +105,7 @@ export default function Navbar() {
           <Link href="/" className="flex-shrink-0">
             <motion.span
               className="text-2xl font-black tracking-widest"
-              style={{ color: "#E50914", fontFamily: "Poppins, sans-serif", textShadow: "0 0 20px rgba(229,9,20,0.5)" }}
+              style={{ color: "#3b82f6", fontFamily: "Poppins, sans-serif", textShadow: "0 0 20px rgba(59,130,246,0.5)" }}
               whileHover={{ scale: 1.05 }}
             >
               METANOA
@@ -126,7 +127,7 @@ export default function Navbar() {
                   {link.href === "/my-list" && watchlist.length > 0 ? (
                     <span className="flex items-center gap-1.5">
                       {link.label}
-                      <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                      <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                         {watchlist.length}
                       </span>
                     </span>
@@ -134,7 +135,7 @@ export default function Navbar() {
                   {active && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-red-600 rounded-full"
+                      className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-blue-600 rounded-full"
                       initial={false}
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
@@ -161,7 +162,7 @@ export default function Navbar() {
 
             {/* Avatar */}
             <motion.div
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center font-bold text-sm cursor-pointer select-none"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-bold text-sm cursor-pointer select-none"
               whileHover={{ scale: 1.1 }}
             >
               M
@@ -237,7 +238,7 @@ export default function Navbar() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search movies, shows, people..."
-                  className="w-full pl-12 pr-12 py-4 text-lg bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition"
+                  className="w-full pl-12 pr-12 py-4 text-lg bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
                 />
                 <button
                   type="button"
@@ -257,11 +258,12 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="mt-2 glass-dark rounded-xl overflow-hidden"
+                    className="mt-2 glass-dark rounded-xl overflow-hidden flex flex-col"
                   >
-                    {searching && !results.length && (
-                      <div className="p-4 text-center text-gray-400 text-sm">Searching…</div>
-                    )}
+                    <div className="overflow-y-auto max-h-[55vh]">
+                      {searching && !results.length && (
+                        <div className="p-4 text-center text-gray-400 text-sm">Searching…</div>
+                      )}
                     {results.map((result) => {
                       const title = result.media_type === "person" ? result.name : getTitle(result as any);
                       const poster = result.media_type === "person" ? result.profile_path : (result as any).poster_path;
@@ -281,7 +283,7 @@ export default function Navbar() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate group-hover:text-red-400 transition">{title}</p>
+                            <p className="text-white text-sm font-medium truncate group-hover:text-blue-400 transition">{title}</p>
                             <p className="text-gray-500 text-xs capitalize">{result.media_type}</p>
                           </div>
                           <svg className="w-4 h-4 text-gray-600 group-hover:text-white transition flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -290,13 +292,16 @@ export default function Navbar() {
                         </button>
                       );
                     })}
+                    </div>
                     {results.length > 0 && (
-                      <button
-                        onClick={handleSearchSubmit as any}
-                        className="w-full py-3 text-center text-sm text-red-400 hover:text-red-300 transition border-t border-white/5"
-                      >
-                        See all results for &quot;{query}&quot;
-                      </button>
+                      <div className="border-t border-white/5 bg-gray-900/50">
+                        <button
+                          onClick={handleSearchSubmit as any}
+                          className="w-full py-3 text-center text-sm text-blue-400 hover:text-blue-300 transition"
+                        >
+                          See all results for &quot;{query}&quot;
+                        </button>
+                      </div>
                     )}
                   </motion.div>
                 )}

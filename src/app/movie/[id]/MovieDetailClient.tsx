@@ -179,7 +179,7 @@ export default function MovieDetailClient({
 
               <button
                 onClick={handleWatchlist}
-                className={`btn-icon w-12 h-12 ${inList ? "bg-red-600 border-red-600" : ""}`}
+                className={`btn-icon w-12 h-12 ${inList ? "bg-blue-600 border-blue-600" : ""}`}
                 title={inList ? "Remove from My List" : "Add to My List"}
               >
                 {inList ? (
@@ -222,7 +222,7 @@ export default function MovieDetailClient({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="mt-10 rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(229,9,20,0.2)] border border-red-900/30"
+              className="mt-10 rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.2)] border border-blue-900/30"
             >
               <div className="flex items-center justify-between px-4 py-3" style={{ background: "var(--bg-secondary)" }}>
                 <span className="text-white font-semibold text-sm">Now Watching: {movie.title}</span>
@@ -256,7 +256,7 @@ export default function MovieDetailClient({
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3">
               {cast.map((member) => (
                 <div key={member.id} className="flex-shrink-0 w-24 text-center">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 mx-auto mb-2 border-2 border-transparent hover:border-red-500 transition">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 mx-auto mb-2 border-2 border-transparent hover:border-blue-500 transition">
                     <img
                       src={member.profile_path
                         ? `https://image.tmdb.org/t/p/w185${member.profile_path}`
@@ -281,7 +281,7 @@ export default function MovieDetailClient({
               {reviews.results.slice(0, 4).map((review) => (
                 <div key={review.id} className="glass-dark rounded-xl p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center font-bold text-sm">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center font-bold text-sm">
                       {review.author.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -300,7 +300,7 @@ export default function MovieDetailClient({
                   {review.content.length > 300 && (
                     <button
                       onClick={() => setExpandedReview(expandedReview === review.id ? null : review.id)}
-                      className="text-red-400 hover:text-red-300 text-xs mt-2 transition"
+                      className="text-blue-400 hover:text-blue-300 text-xs mt-2 transition"
                     >
                       {expandedReview === review.id ? "Show less" : "Read more"}
                     </button>
@@ -353,7 +353,7 @@ export default function MovieDetailClient({
               />
               <button
                 onClick={() => setShowTrailer(false)}
-                className="absolute -top-4 -right-4 btn-icon bg-red-600 border-red-600 w-10 h-10"
+                className="absolute -top-4 -right-4 btn-icon bg-blue-600 border-blue-600 w-10 h-10"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
