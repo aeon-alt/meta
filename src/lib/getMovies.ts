@@ -4,8 +4,10 @@ export type Movie = {
   poster: string;
 };
 
-export async function getMovies(): Promise<Movie[]> {
-  const url = "https://api.themoviedb.org/3/movie/popular";
+export async function getMovies(
+  category: "popular" | "top_rated" | "upcoming" = "popular"
+): Promise<Movie[]> {
+  const url = `https://api.themoviedb.org/3/movie/${category}`;
 
   const res = await fetch(url, {
     headers: {
@@ -14,7 +16,7 @@ export async function getMovies(): Promise<Movie[]> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch movies");
+    throw new Error(`Failed to fetch movies: ${category}`);
   }
 
   const data = await res.json();

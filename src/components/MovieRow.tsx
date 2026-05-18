@@ -7,7 +7,7 @@ type Movie = {
   id: number;
   title: string;
   poster: string;
-  type: "movie" | "tv";
+  type?: "movie" | "tv";
 };
 
 export default function MovieRow({
