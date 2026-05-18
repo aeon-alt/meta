@@ -1,89 +1,310 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { useWatchlistStore } from "@/store/useWatchlistStore";
+import { searchMulti } from "@/lib/tmdb";
+import type { SearchResult } from "@/types/tmdb";
+import { getPosterUrl, getTitle } from "@/types/tmdb";
+
+const NAV_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/movies", label: "Movies" },
+  { href: "/tv", label: "TV Shows" },
+  { href: "/my-list", label: "My List" },
+];
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { watchlist } = useWatchlistStore();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  // Scroll detection
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-    router.push(`/search?q=${encodeURIComponent(query)}`);
+  // Focus search input when opened
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 100);
+  }, [searchOpen]);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) { setResults([]); return; }
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const data = await searchMulti(query);
+        setResults(data.results.slice(0, 8));
+      } catch { /* silent */ }
+      finally { setSearching(false); }
+    }, 400);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setQuery("");
+    setResults([]);
+  }, []);
+
+  const handleResultClick = (result: SearchResult) => {
+    if (result.media_type === "movie") router.push(`/movie/${result.id}`);
+    else if (result.media_type === "tv") router.push(`/tv/${result.id}`);
+    closeSearch();
   };
 
-  return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-slate-950/90 backdrop-blur-md border-b border-blue-900/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    router.push(`/search?q=${encodeURIComponent(query)}`);
+    closeSearch();
+  };
 
-        {/* TOP ROW (Logo + Profile for mobile layout) */}
-        <div className="flex items-center justify-between w-full sm:w-auto">
+  // ESC to close search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeSearch(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [closeSearch]);
+
+  return (
+    <>
+      <motion.nav
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        initial={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)" }}
+        animate={{ 
+          background: scrolled 
+            ? "linear-gradient(to bottom, rgba(11,11,15,0.98) 0%, rgba(11,11,15,0.92) 100%)" 
+            : "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)",
+          boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.5)" : "none"
+        }}
+        transition={{ duration: 0.3 }}
+        style={{ backdropFilter: scrolled ? "blur(10px)" : "none" }}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16 h-16 sm:h-20 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link href="/">
-            <h1 className="text-cyan-400 text-2xl sm:text-3xl font-bold tracking-wide hover:opacity-80 transition">
+          <Link href="/" className="flex-shrink-0">
+            <motion.span
+              className="text-2xl font-black tracking-widest"
+              style={{ color: "#E50914", fontFamily: "Poppins, sans-serif", textShadow: "0 0 20px rgba(229,9,20,0.5)" }}
+              whileHover={{ scale: 1.05 }}
+            >
               METANOA
-            </h1>
+            </motion.span>
           </Link>
 
-          {/* Profile (mobile only) */}
-          <div className="sm:hidden w-9 h-9 rounded-full bg-cyan-500 text-slate-900 flex items-center justify-center font-bold">
-            M
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex items-center gap-6">
+            {NAV_LINKS.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative text-sm font-medium transition-colors duration-300 ${
+                    active ? "text-white" : "text-gray-300 hover:text-gray-400"
+                  }`}
+                >
+                  {link.href === "/my-list" && watchlist.length > 0 ? (
+                    <span className="flex items-center gap-1.5">
+                      {link.label}
+                      <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                        {watchlist.length}
+                      </span>
+                    </span>
+                  ) : link.label}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-red-600 rounded-full"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-3">
+            {/* Search icon */}
+            <motion.button
+              onClick={() => setSearchOpen(true)}
+              className="btn-icon"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Open search"
+            >
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+              </svg>
+            </motion.button>
+
+            {/* Avatar */}
+            <motion.div
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center font-bold text-sm cursor-pointer select-none"
+              whileHover={{ scale: 1.1 }}
+            >
+              M
+            </motion.div>
+
+            {/* Mobile hamburger */}
+            <button
+              className="lg:hidden btn-icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Open menu"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {mobileMenuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* SEARCH BAR */}
-        <form
-          onSubmit={handleSearch}
-          className="
-            flex items-center w-full sm:max-w-md
-            bg-slate-800/70
-            border border-slate-700
-            rounded-full
-            px-3 py-2
-            focus-within:ring-2 focus-within:ring-cyan-400
-            transition
-          "
-        >
-          {/* Icon */}
-          <span className="text-slate-400 text-lg mr-2">🔍</span>
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden glass-dark border-t border-white/5"
+            >
+              <div className="px-4 py-4 flex flex-col gap-3">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-sm font-medium py-2 transition-colors ${pathname === link.href ? "text-white" : "text-gray-400"}`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
 
-          {/* Input */}
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search movies..."
-            className="
-              w-full bg-transparent outline-none
-              text-white text-sm sm:text-base
-              placeholder:text-slate-400
-            "
-          />
-
-          {/* Button */}
-          <button
-            type="submit"
-            className="
-              ml-2 px-3 py-1
-              bg-cyan-500 hover:bg-cyan-400
-              text-slate-900 font-semibold
-              text-xs sm:text-sm
-              rounded-full
-              transition
-            "
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            key="search-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex flex-col"
+            style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(20px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) closeSearch(); }}
           >
-            Go
-          </button>
-        </form>
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="w-full max-w-2xl mx-auto px-4 pt-20"
+            >
+              {/* Search Input */}
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search movies, shows, people..."
+                  className="w-full pl-12 pr-12 py-4 text-lg bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition"
+                />
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </form>
 
-        {/* PROFILE (desktop only) */}
-        <div className="hidden sm:flex w-9 h-9 rounded-full bg-cyan-500 text-slate-900 items-center justify-center font-bold">
-          M
-        </div>
-      </div>
-    </nav>
+              {/* Search Results */}
+              <AnimatePresence>
+                {(results.length > 0 || searching) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="mt-2 glass-dark rounded-xl overflow-hidden"
+                  >
+                    {searching && !results.length && (
+                      <div className="p-4 text-center text-gray-400 text-sm">Searching…</div>
+                    )}
+                    {results.map((result) => {
+                      const title = result.media_type === "person" ? result.name : getTitle(result as any);
+                      const poster = result.media_type === "person" ? result.profile_path : (result as any).poster_path;
+                      return (
+                        <button
+                          key={result.id}
+                          onClick={() => handleResultClick(result)}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/8 transition text-left group"
+                        >
+                          <div className="w-9 h-12 rounded overflow-hidden flex-shrink-0 bg-gray-800">
+                            {poster && (
+                              <img
+                                src={getPosterUrl(poster, "w200")}
+                                alt={title}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate group-hover:text-red-400 transition">{title}</p>
+                            <p className="text-gray-500 text-xs capitalize">{result.media_type}</p>
+                          </div>
+                          <svg className="w-4 h-4 text-gray-600 group-hover:text-white transition flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      );
+                    })}
+                    {results.length > 0 && (
+                      <button
+                        onClick={handleSearchSubmit as any}
+                        className="w-full py-3 text-center text-sm text-red-400 hover:text-red-300 transition border-t border-white/5"
+                      >
+                        See all results for &quot;{query}&quot;
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

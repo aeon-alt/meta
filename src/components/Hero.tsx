@@ -1,145 +1,297 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Movie } from "@/types/tmdb";
+import { getBackdropUrl, getPosterUrl, getTitle, getReleaseYear } from "@/types/tmdb";
+import { useWatchlistStore } from "@/store/useWatchlistStore";
 
-type Movie = {
-  id: number;
-  title: string;
-  poster: string;
+interface HeroProps {
+  movies: (Movie | any)[]; // Accept TVShow or Movie
+  mediaType?: "movie" | "tv";
+}
+
+const GENRE_MAP: Record<number, string> = {
+  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
+  80: "Crime", 99: "Documentary", 18: "Drama", 14: "Fantasy",
+  27: "Horror", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi",
+  53: "Thriller", 10752: "War", 37: "Western",
 };
 
-export default function Hero({ movies }: { movies: Movie[] }) {
-  const router = useRouter();
+const AUTOPLAY_INTERVAL = 7000;
 
-  const handleRandomWatch = () => {
-    if (!movies || movies.length === 0) return;
+export default function Hero({ movies, mediaType = "movie" }: HeroProps) {
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlistStore();
 
-    const randomMovie =
-      movies[Math.floor(Math.random() * movies.length)];
+  const featured = movies.slice(0, 8);
+  const movie = featured[current];
+  const inList = movie ? isInWatchlist(movie.id) : false;
 
-    router.push(`https://vidlink.pro/movie/${randomMovie.id}`);
+  const title = movie ? getTitle(movie as any) : "";
+  const year = movie ? getReleaseYear(movie as any) : "";
+  const href = movie ? `/${mediaType}/${movie.id}` : "";
+
+  const goTo = useCallback((idx: number) => {
+    setCurrent(idx);
+  }, []);
+
+  const goNext = useCallback(() => {
+    setCurrent((c) => (c + 1) % featured.length);
+  }, [featured.length]);
+
+  const goPrev = useCallback(() => {
+    setCurrent((c) => (c - 1 + featured.length) % featured.length);
+  }, [featured.length]);
+
+  // Autoplay
+  useEffect(() => {
+    if (paused) return;
+    timerRef.current = setInterval(goNext, AUTOPLAY_INTERVAL);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [paused, goNext]);
+
+  const handleWatchlist = () => {
+    if (!movie) return;
+    if (inList) removeFromWatchlist(movie.id);
+    else addToWatchlist(movie as any, mediaType);
   };
 
-  // Slice movies for two scrolling rows
-  // Row 1 uses first 10, Row 2 uses next 10.
-  // We duplicate each array to create an infinite loop effect.
-  const firstRowMovies = movies.slice(0, 10);
-  const secondRowMovies = movies.slice(10, 20);
+  const handleTrailerClick = async () => {
+    if (!movie) return;
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/${mediaType}/${movie.id}/videos?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
+      );
+      const data = await res.json();
+      const trailer = data.results?.find(
+        (v: any) => v.type === "Trailer" && v.site === "YouTube"
+      ) || data.results?.[0];
+      if (trailer) {
+        setTrailerKey(trailer.key);
+        setShowTrailer(true);
+      }
+    } catch { /* silent */ }
+  };
 
-  const row1 = [...firstRowMovies, ...firstRowMovies];
-  const row2 = [...secondRowMovies, ...secondRowMovies];
+  if (!movie) return null;
+
+  const genres = movie.genre_ids
+    .slice(0, 3)
+    .map((id: number) => GENRE_MAP[id])
+    .filter(Boolean);
 
   return (
-    <section className="relative min-h-[85vh] lg:h-[80vh] flex items-center px-6 sm:px-10 text-white bg-gradient-to-b from-[#050b1a] via-[#0a1633] to-slate-950 overflow-hidden select-none">
-      
-      {/* Content wrapper with grid for desktop side-by-side layout */}
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center z-10 py-16 lg:py-0">
-        
-        {/* Left side content (welcoming text, buttons) */}
-        <div className="lg:col-span-6 space-y-6 text-left relative z-10 max-w-2xl">
-          {/* Tagline */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/25 text-cyan-400 text-xs sm:text-sm font-semibold tracking-wide">
-            ✨ Now Streaming Futuristic Media
-          </div>
+    <div
+      className="relative w-full overflow-hidden"
+      style={{ height: "100vh", minHeight: "580px", maxHeight: "900px" }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* Backdrop images */}
+      <AnimatePresence mode="sync">
+        <motion.div
+          key={`backdrop-${movie.id}`}
+          className="absolute inset-0"
+          initial={{ opacity: 0, scale: 1.06 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.9, ease: "easeInOut" }}
+        >
+          <img
+            src={getBackdropUrl(movie.backdrop_path, "original")}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+      </AnimatePresence>
 
-          {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight drop-shadow-md">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">Metanoa</span>
-          </h1>
+      {/* Gradients */}
+      <div className="absolute inset-0 hero-gradient-left" />
+      <div className="absolute inset-0 hero-gradient-bottom" />
+      <div className="absolute inset-0" style={{ background: "rgba(11,11,15,0.25)" }} />
 
-          {/* Description */}
-          <p className="text-gray-300 text-base sm:text-lg lg:text-xl leading-relaxed max-w-xl">
-            Stream unlimited movies and TV shows with a futuristic experience. Explore high definition content instantaneously.
-          </p>
-
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-            {/* RANDOM WATCH */}
-            <button
-              onClick={handleRandomWatch}
-              className="
-                bg-cyan-500 hover:bg-cyan-400 text-slate-950
-                px-7 py-3.5 rounded-xl
-                transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]
-                font-bold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer
-              "
-            >
-              <span>▶</span> Watch Random Movie
-            </button>
-
-            {/* INFO */}
-            <button
-              className="
-                bg-white/10 hover:bg-white/20 text-white border border-white/10
-                px-7 py-3.5 rounded-xl
-                transition-all duration-300 font-semibold text-sm sm:text-base cursor-pointer
-              "
-            >
-              More Info
-            </button>
-          </div>
-        </div>
-
-        {/* Right side / Background: Auto-scrolling Movie Wall */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-full h-auto overflow-hidden flex flex-col gap-4 py-8 lg:relative lg:top-0 lg:translate-y-0 opacity-20 lg:opacity-100 pointer-events-auto z-0 lg:z-10 lg:pl-4 lg:col-span-6 lg:w-full">
-          
-          {/* Row 1: Left to Right (Moving scroll-right) */}
-          {row1.length > 0 && (
-            <div className="flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_10%,white_90%,transparent)] pointer-events-auto">
-              <div className="animate-scroll-right flex gap-3 pr-3">
-                {row1.map((movie, idx) => (
-                  <div
-                    key={`row1-${movie.id}-${idx}`}
-                    onClick={() => router.push(`https://vidlink.pro/movie/${movie.id}`)}
-                    className="relative w-28 sm:w-36 h-40 sm:h-52 shrink-0 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:scale-108 hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-300 border border-slate-800/80 hover:border-cyan-400/50 group/item"
-                  >
-                    <img
-                      src={`https://image.tmdb.org/t/p/w300${movie.poster}`}
-                      alt={movie.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                      <p className="text-[10px] sm:text-xs font-semibold text-white truncate w-full drop-shadow-md">{movie.title}</p>
-                    </div>
-                  </div>
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col justify-end pb-24 px-6 md:px-12 lg:px-16 max-w-4xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`content-${movie.id}`}
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
+          >
+            {/* Genre pills */}
+            {genres.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {genres.map((g: string) => (
+                  <span key={g} className="px-3 py-1 rounded-full text-xs font-semibold glass text-gray-300">
+                    {g}
+                  </span>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Row 2: Right to Left (Moving scroll-left) */}
-          {row2.length > 0 && (
-            <div className="flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_10%,white_90%,transparent)] pointer-events-auto">
-              <div className="animate-scroll-left flex gap-3 pr-3">
-                {row2.map((movie, idx) => (
-                  <div
-                    key={`row2-${movie.id}-${idx}`}
-                    onClick={() => router.push(`https://vidlink.pro/movie/${movie.id}`)}
-                    className="relative w-28 sm:w-36 h-40 sm:h-52 shrink-0 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:scale-108 hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-300 border border-slate-800/80 hover:border-cyan-400/50 group/item"
-                  >
-                    <img
-                      src={`https://image.tmdb.org/t/p/w300${movie.poster}`}
-                      alt={movie.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                      <p className="text-[10px] sm:text-xs font-semibold text-white truncate w-full drop-shadow-md">{movie.title}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Title */}
+            <h1
+              className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] mb-4 tracking-tight"
+              style={{ fontFamily: "Poppins, sans-serif", textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
+            >
+              {title}
+            </h1>
+
+            {/* Meta row */}
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
+              <span className="flex items-center gap-1 text-yellow-400 font-bold">
+                ★ {movie.vote_average.toFixed(1)}
+              </span>
+              <span className="text-gray-400">
+                {year}
+              </span>
+              <span className="px-2 py-0.5 border border-gray-600 text-gray-400 rounded text-xs">HD</span>
             </div>
-          )}
-        </div>
+
+            {/* Overview */}
+            <p className="text-gray-200 text-base sm:text-lg leading-relaxed line-clamp-3 mb-8 max-w-2xl text-shadow-sm">
+              {movie.overview}
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <Link href={href} className="btn-primary text-base px-7 py-3.5">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                Play Now
+              </Link>
+
+              <button onClick={handleTrailerClick} className="btn-secondary text-base px-6 py-3.5">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.277A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                </svg>
+                Trailer
+              </button>
+
+              <button
+                onClick={handleWatchlist}
+                className={`btn-icon w-12 h-12 ${inList ? "bg-red-600 border-red-600" : ""}`}
+                title={inList ? "Remove from My List" : "Add to My List"}
+              >
+                {inList ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Glow effect */}
-      <div className="absolute right-0 top-0 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-cyan-500 opacity-15 blur-[120px] z-0" />
+      {/* Left/Right nav arrows */}
+      <button
+        onClick={goPrev}
+        className="absolute left-0 top-0 bottom-0 z-20 w-16 hidden sm:flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 group"
+        style={{ background: "linear-gradient(to right, rgba(11,11,15,0.8) 0%, rgba(11,11,15,0) 100%)" }}
+        aria-label="Previous movie"
+      >
+        <svg className="w-10 h-10 text-white group-hover:scale-125 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={goNext}
+        className="absolute right-0 top-0 bottom-0 z-20 w-16 hidden sm:flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 group"
+        style={{ background: "linear-gradient(to left, rgba(11,11,15,0.8) 0%, rgba(11,11,15,0) 100%)" }}
+        aria-label="Next movie"
+      >
+        <svg className="w-10 h-10 text-white group-hover:scale-125 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
 
-      {/* Netflix-style Bottom Fade Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent pointer-events-none z-0" />
-    </section>
+      {/* Dot Indicators */}
+      <div className="absolute bottom-8 right-6 sm:right-10 z-20 flex gap-2">
+        {featured.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`transition-all duration-300 rounded-full ${i === current ? "w-6 h-2 bg-red-600" : "w-2 h-2 bg-white/40 hover:bg-white/70"}`}
+          />
+        ))}
+      </div>
+
+      {/* Progress bar */}
+      {!paused && (
+        <motion.div
+          key={`progress-${current}`}
+          className="absolute bottom-0 left-0 h-0.5 z-20"
+          style={{ background: "var(--accent)" }}
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
+          transition={{ duration: AUTOPLAY_INTERVAL / 1000, ease: "linear" }}
+        />
+      )}
+
+      {/* Thumbnail strip */}
+      <div className="absolute bottom-12 right-6 sm:right-10 lg:right-16 z-20 hidden lg:flex gap-2">
+        {featured.slice(0, 5).map((m, i) => (
+          <button
+            key={m.id}
+            onClick={() => goTo(i)}
+            className={`w-16 h-10 rounded overflow-hidden transition-all duration-300 ${i === current ? "ring-2 ring-red-500 opacity-100 scale-110" : "opacity-50 hover:opacity-80"}`}
+          >
+            <img src={getPosterUrl(m.poster_path, "w200")} alt={m.title} className="w-full h-full object-cover" />
+          </button>
+        ))}
+      </div>
+
+      {/* Trailer Modal */}
+      <AnimatePresence>
+        {showTrailer && trailerKey && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.95)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTrailer(false)}
+          >
+            <motion.div
+              className="relative w-full max-w-4xl aspect-video mx-4"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+                allow="autoplay; fullscreen"
+                allowFullScreen
+                className="w-full h-full rounded-xl"
+              />
+              <button
+                onClick={() => setShowTrailer(false)}
+                className="absolute -top-4 -right-4 btn-icon bg-red-600 border-red-600 w-10 h-10"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

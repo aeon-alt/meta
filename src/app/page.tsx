@@ -1,40 +1,99 @@
 import Hero from "@/components/Hero";
 import MovieRow from "@/components/MovieRow";
-import Separator from "@/components/Separator";
-import { getMovies } from "@/lib/getMovies";
+import {
+  getTrendingMovies,
+  getPopularMovies,
+  getTopRatedMovies,
+  getUpcomingMovies,
+  getNowPlayingMovies,
+  getMoviesByGenre,
+  getPopularTV,
+  GENRE_IDS,
+} from "@/lib/tmdb";
 
-export default async function Page() {
-  // Fetch multiple movie categories in parallel for speed
-  const [popularMovies, topRatedMovies, upcomingMovies] = await Promise.all([
-    getMovies("popular"),
-    getMovies("top_rated"),
-    getMovies("upcoming"),
+export default async function HomePage() {
+  const [
+    trendingData,
+    popularData,
+    topRatedData,
+    upcomingData,
+    nowPlayingData,
+    actionData,
+    horrorData,
+    comedyData,
+    animeData,
+    tvData,
+  ] = await Promise.all([
+    getTrendingMovies("week"),
+    getPopularMovies(),
+    getTopRatedMovies(),
+    getUpcomingMovies(),
+    getNowPlayingMovies(),
+    getMoviesByGenre(GENRE_IDS.ACTION),
+    getMoviesByGenre(GENRE_IDS.HORROR),
+    getMoviesByGenre(GENRE_IDS.COMEDY),
+    getMoviesByGenre(GENRE_IDS.ANIMATION),
+    getPopularTV(),
   ]);
 
+  const trending = trendingData.results as any[];
+  const popular = popularData.results;
+  const topRated = topRatedData.results;
+  const upcoming = upcomingData.results;
+  const nowPlaying = nowPlayingData.results;
+  const action = actionData.results;
+  const horror = horrorData.results;
+  const comedy = comedyData.results;
+  const anime = animeData.results;
+  const tv = tvData.results as any[];
+
   return (
-    <main className="bg-slate-950 min-h-screen pb-20">
-      {/* Hero Header Billboard */}
-      <Hero movies={popularMovies} />
+    <div style={{ background: "var(--bg-primary)" }} className="min-h-screen">
+      {/* Cinematic Hero Billboard */}
+      <Hero movies={trending} />
 
-      {/* Movie categories with dynamic Netflix separators */}
-      <div className="relative z-10 -mt-4 lg:-mt-12 space-y-6">
-        
-        {/* Row 1: Trending Now */}
-        <MovieRow title="Trending Now" movies={popularMovies} />
-        
-        {/* Glowing Gradient Separator */}
-        <Separator variant="glow" />
+      {/* Movie Rows */}
+      <div className="pt-4 pb-24 space-y-2">
 
-        {/* Row 2: Top Rated */}
-        <MovieRow title="Top Rated Masterpieces" movies={topRatedMovies} />
+        <MovieRow title="Trending This Week" items={trending} mediaType="movie" showRank={false} />
 
-        {/* Dark subtle Netflix bar separator */}
-        <Separator variant="netflix" />
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
 
-        {/* Row 3: Upcoming Releases */}
-        <MovieRow title="Upcoming Releases" movies={upcomingMovies} />
+        <MovieRow title="Top 10 Movies" items={topRated.slice(0, 10)} mediaType="movie" showRank />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Now Playing" items={nowPlaying} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Popular Movies" items={popular} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Upcoming Releases" items={upcoming} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Action & Adventure" items={action} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Horror" items={horror} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Comedy" items={comedy} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Anime & Animation" items={anime} mediaType="movie" />
+
+        <div className="separator-glow mx-6 md:mx-12 lg:mx-16 my-2" />
+
+        <MovieRow title="Popular TV Shows" items={tv} mediaType="tv" />
 
       </div>
-    </main>
+    </div>
   );
 }
